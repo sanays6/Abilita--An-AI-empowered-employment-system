@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row min-vh-100 align-items-center fade-in py-5">
+    <div class="col-xl-6 col-lg-8 mx-auto">
+        <div class="text-center mb-4">
+            <div class="display-4 text-warning mb-3"><i class="bi bi-cpu-fill"></i></div>
+            <h2 class="fw-bold">Dynamic AI Generator</h2>
+            <p class="text-muted">Command the LLM to synthesize highly tailored arrays.</p>
+        </div>
+        
+        <div class="card premium-card border-0 shadow-lg p-sm-5">
+            <div class="card-body py-2">
+                <form method="post" id="aiGenerateForm">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Target Assessment Domain</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-globe"></i></span>
+                            <input type="text" class="form-control border-start-0 ps-0 text-bg-light fw-bold custom-input text-primary" value="{{ expert_domain }}" readonly disabled>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4 text-muted opacity-25">
+                    
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-sliders text-warning me-2"></i> Custom Topic Distribution Constraints</h6>
+                    
+                    <!-- Topic 1 -->
+                    <div class="row mb-3">
+                        <div class="col-8">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Topic 1 Focus</label>
+                            <input type="text" name="topic_1" class="form-control text-bg-light custom-input" value="Mathematics / Numerical Aptitude" required>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Count</label>
+                            <input type="number" name="count_1" class="form-control text-bg-light custom-input" value="5" min="0" max="50" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Topic 2 -->
+                    <div class="row mb-3">
+                        <div class="col-8">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Topic 2 Focus</label>
+                            <input type="text" name="topic_2" class="form-control text-bg-light custom-input" value="English Language / Grammar" required>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Count</label>
+                            <input type="number" name="count_2" class="form-control text-bg-light custom-input" value="5" min="0" max="50" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Topic 3 -->
+                    <div class="row mb-4">
+                        <div class="col-8">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Topic 3 Focus</label>
+                            <input type="text" name="topic_3" class="form-control text-bg-light custom-input" value="Basic Technical Coding & Logic" required>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Count</label>
+                            <input type="number" name="count_3" class="form-control text-bg-light custom-input" value="10" min="0" max="50" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold rounded-pill shadow-sm mt-3 text-dark" id="btnLaunchSynth">
+                        Initialize Synthesizer <i class="bi bi-lightning-charge ms-1"></i>
+                    </button>
+                    
+                    <div class="text-center mt-4">
+                        <a href="{% url 'expert_list_aptitude' %}" class="text-decoration-none small text-muted"><i class="bi bi-arrow-left"></i> Cancel and return to Repository</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.custom-input { background-color: #f8f9fa !important; box-shadow: none !important; }
+.custom-input:focus { background-color: #fff !important; border-color: #ffc107 !important; }
+.input-group:focus-within .input-group-text { background-color: #fff !important; border-color: #ffc107; color: #ffc107 !important; }
+.input-group:focus-within .custom-input { border-color: #ffc107; }
+</style>
+
+<script>
+    document.getElementById('aiGenerateForm').addEventListener('submit', function() {
+        const btn = document.getElementById('btnLaunchSynth');
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Establishing API Hook...';
+        btn.classList.add('disabled');
+    });
+</script>
+{% endblock %}

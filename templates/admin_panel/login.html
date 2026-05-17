@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row min-vh-100 align-items-center fade-in pb-5">
+    <div class="col-md-5 mx-auto">
+        <div class="text-center mb-4">
+            <div class="display-4 text-danger mb-3"><i class="bi bi-incognito"></i></div>
+            <h2 class="fw-bold">Root Initialization</h2>
+            <p class="text-muted d-flex justify-content-center align-items-center gap-2">
+                <span class="spinner-grow spinner-grow-sm text-danger" role="status"></span>
+                Secure Administrator Backbone
+            </p>
+        </div>
+        
+        <div class="card premium-card border-0 shadow-lg p-sm-5 border-top border-danger border-4">
+            <div class="card-body py-2">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Admin Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-shield-asterisk"></i></span>
+                            <input type="email" name="email" class="form-control border-start-0 ps-0 text-bg-light custom-input" placeholder="admin@root.sys" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Passphrase</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-key-fill"></i></span>
+                            <input type="password" name="password" class="form-control border-start-0 ps-0 text-bg-light custom-input" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold rounded-pill shadow-sm mt-3">Execute Over-ride</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.custom-input { background-color: #f8f9fa !important; box-shadow: none !important; }
+.custom-input:focus { background-color: #fff !important; }
+.input-group:focus-within .input-group-text { background-color: #fff !important; border-color: #dc3545; color: #dc3545 !important; }
+.input-group:focus-within .custom-input { border-color: #dc3545; }
+</style>
+{% endblock %}

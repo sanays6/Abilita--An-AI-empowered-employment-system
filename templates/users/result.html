@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4 fade-in">
+    <div class="row">
+        <div class="col-md-10 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="fw-bold"><i class="bi bi-file-earmark-bar-graph text-primary me-2"></i> Report: {{ result.user.name }}</h2>
+                <a href="{% url 'user_history' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back to History</a>
+            </div>
+
+            <div class="card premium-card border-0 shadow-sm mb-5">
+                <div class="card-body">
+                    <p class="text-muted text-center mb-4">Assessment Domain:  <span class="badge bg-primary fs-6">{{ result.domain }}</span></p>
+                    
+                    <div class="row text-center mb-2 px-3">
+                        <div class="col-md-4 mb-3">
+                            <div class="p-4 rounded-4 bg-light border">
+                                <h6 class="text-muted text-uppercase fw-bold mb-2">Aptitude Score</h6>
+                                <h1 class="display-5 fw-bold text-info">{{ result.aptitude_score }} <span class="fs-4 text-muted">/ 20</span></h1>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="p-4 rounded-4 bg-light border">
+                                <h6 class="text-muted text-uppercase fw-bold mb-2">Interview Score</h6>
+                                <h1 class="display-5 fw-bold text-warning">{{ result.interview_score }} <span class="fs-4 text-muted">/ 10</span></h1>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="p-4 rounded-4 bg-light border {% if result.total_score >= 80 %}border-success{% elif result.total_score <= 40 %}border-danger{% endif %}">
+                                <h6 class="text-muted text-uppercase fw-bold mb-2">Total Performance</h6>
+                                <h1 class="display-5 fw-bold {% if result.total_score >= 80 %}text-success{% elif result.total_score >= 50 %}text-warning{% else %}text-danger{% endif %}">{{ result.total_score }} <span class="fs-4 text-muted">%</span></h1>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ATS Section -->
+            <h4 class="mb-3 mt-5 fw-bold text-dark"><i class="bi bi-search text-primary me-2"></i> ATS Resume Analyser</h4>
+            {% if ats_evaluation %}
+                <div class="card mb-5 border-0 shadow-sm text-bg-light rounded-4 collapse-trigger">
+                    <div class="card-body p-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-3 text-center border-end">
+                                <h1 class="display-4 fw-bold text-primary mb-0">{{ ats_evaluation.ats_score }}</h1>
+                                <p class="text-muted mb-0">ATS Match</p>
+                            </div>
+                            <div class="col-md-9 ps-md-4">
+                                <h6 class="fw-bold mt-2 mt-md-0"><i class="bi bi-tags"></i> Missing Keywords:</h6>
+                                {% if ats_evaluation.missing_keywords %}
+                                    <div class="mb-3">
+                                    {% for kw in ats_evaluation.missing_keywords %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 me-1 mb-1 px-2 py-1">{{ kw }}</span>
+                                    {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="text-success small fw-bold">✓ None found. Excellent keyword mapping!</p>
+                                {% endif %}
+                                
+                                <h6 class="fw-bold"><i class="bi bi-lightbulb"></i> Suggestions:</h6>
+                                <p class="mb-0 text-muted">{{ ats_evaluation.suggestions }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-light border shadow-sm">No ATS score available for this assessment.</div>
+            {% endif %}
+
+            <!-- Aptitude Section -->
+            <h4 class="mb-3 mt-5 fw-bold text-dark"><i class="bi bi-ui-checks-grid text-primary me-2"></i> Aptitude Breakdown</h4>
+            {% if aptitude_eval %}
+                <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
+                    <div class="list-group list-group-flush">
+                        {% for pt in aptitude_eval %}
+                        <div class="list-group-item p-4">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="fw-bold mb-3">Q{{ forloop.counter }}. {{ pt.question }}</h6>
+                                <div>
+                                    {% if pt.is_correct %}
+                                        <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Correct</span>
+                                    {% else %}
+                                        <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i> Incorrect</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p class="mb-1 text-muted small text-uppercase fw-bold">Your Answer</p>
+                                    <p class="mb-0 {% if pt.is_correct %}text-success fw-bold{% else %}text-danger fw-bold text-decoration-line-through{% endif %}">{{ pt.user_answer }}</p>
+                                </div>
+                                {% if not pt.is_correct %}
+                                <div class="col-md-6 border-start">
+                                    <p class="mb-1 text-muted small text-uppercase fw-bold">Correct Answer</p>
+                                    <p class="mb-0 text-success fw-bold">{{ pt.correct_answer }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-light border shadow-sm">Detailed aptitude breakdown is not available for this session.</div>
+            {% endif %}
+
+            <!-- Interview Section -->
+            <h4 class="mb-3 mt-5 fw-bold text-dark"><i class="bi bi-mic text-primary me-2"></i> Voice Interview Analysis</h4>
+            {% if details %}
+                <div class="accordion shadow-sm rounded-4 overflow-hidden border-0 mb-5" id="evalAccordion">
+                    {% for item in details %}
+                    <div class="accordion-item border-start-0 border-end-0 {% if forloop.first %}border-top-0{% endif %}">
+                        <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                            <button class="accordion-button bg-light {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ forloop.counter }}">
+                                <span class="fw-bold me-2">Q{{ forloop.counter }}:</span> {{ item.question|truncatewords:8 }}... 
+                                <span class="badge {% if item.score >= 8 %}bg-success{% elif item.score >= 5 %}bg-warning{% else %}bg-danger{% endif %} ms-auto me-3 px-3 py-2 rounded-pill shadow-sm">{{ item.score }} / 10</span>
+                            </button>
+                        </h2>
+                        <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ forloop.counter }}" data-bs-parent="#evalAccordion">
+                            <div class="accordion-body p-4">
+                                <h6 class="text-primary fw-bold mb-3">{{ item.question }}</h6>
+                                
+                                <div class="p-3 bg-secondary bg-opacity-10 rounded-3 mb-4 position-relative">
+                                    <span class="position-absolute top-0 start-0 translate-middle badge rounded-pill bg-secondary"><i class="bi bi-mic-fill"></i></span>
+                                    <p class="mb-0 ms-2 text-dark font-monospace small" style="white-space: pre-wrap;">{{ item.user_answer }}</p>
+                                </div>
+                                
+                                <h6 class="text-muted fw-bold text-uppercase small mb-2"><i class="bi bi-robot me-1"></i> AI Feedback</h6>
+                                <p class="mb-0 text-muted" style="white-space: pre-wrap;">{{ item.llm_evaluation }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-light border shadow-sm">Detailed interview evaluation found.</div>
+            {% endif %}
+
+            <div class="text-center mt-5 mb-5 pb-5">
+                <a href="{% url 'user_history' %}" class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm"><i class="bi bi-journal-check me-2"></i> Finished Reviewing</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

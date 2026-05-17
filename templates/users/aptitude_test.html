@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid assessment-layout fade-in">
+    <!-- Sticky Timer Header -->
+    <div class="timer-header bg-white shadow-sm d-flex justify-content-between align-items-center px-4 py-3 rounded-4 mb-4">
+        <h4 class="mb-0 fw-bold"><i class="bi bi-ui-checks-grid text-primary me-2"></i> Aptitude Assessment</h4>
+        <div class="d-flex align-items-center">
+            <span class="text-muted me-3">Time Remaining:</span>
+            <div id="countdownTimer" class="badge bg-primary fs-5 px-3 py-2 rounded-pill shadow-sm">
+                <!-- Javascript will format mm:ss here -->
+                Loading...
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="aptitudeForm">
+        {% csrf_token %}
+        <div class="row">
+            <!-- Sidebar Navigation -->
+            <div class="col-lg-3 mb-4">
+                <div class="card premium-card border-0 shadow-sm sticky-sidebar">
+                    <div class="card-header bg-transparent border-0 pt-4 pb-0">
+                        <h6 class="fw-bold text-muted text-uppercase mb-0">Question Palette</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex flex-wrap gap-2">
+                            {% for q in questions %}
+                                <a href="#qbox_{{ q.id }}" class="btn btn-outline-secondary palette-btn">{{ forloop.counter }}</a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 pb-4">
+                        <button type="submit" class="btn btn-success w-100 fw-bold py-2 shadow-sm" id="btnSubmitTest">Finish Assessment</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Question Area -->
+            <div class="col-lg-9">
+                <div class="card premium-card border-0 shadow-sm pb-5 mb-5">
+                    <div class="card-body p-sm-5">
+                        {% for q in questions %}
+                        <div class="question-box mb-5 pb-4 border-bottom" id="qbox_{{ q.id }}">
+                            <div class="d-flex mb-3">
+                                <div class="q-number bg-primary text-white bg-opacity-75 rounded flex-center me-3" style="width: 32px; height: 32px; font-weight: bold; flex-shrink: 0;">
+                                    {{ forloop.counter }}
+                                </div>
+                                <h5 class="fw-bold mb-0 mt-1" style="line-height: 1.4;">{{ q.question }}</h5>
+                            </div>
+
+                            <div class="options-container ms-sm-5 ms-2 ps-sm-2">
+                                <label class="option-card d-flex align-items-center p-3 mb-2 rounded border custom-control custom-radio font-weight-normal cursor-pointer">
+                                    <input type="radio" name="q_{{ q.id }}" value="{{ q.option1 }}" class="me-3" required>
+                                    {{ q.option1 }}
+                                </label>
+                                <label class="option-card d-flex align-items-center p-3 mb-2 rounded border custom-control custom-radio font-weight-normal cursor-pointer">
+                                    <input type="radio" name="q_{{ q.id }}" value="{{ q.option2 }}" class="me-3">
+                                    {{ q.option2 }}
+                                </label>
+                                <label class="option-card d-flex align-items-center p-3 mb-2 rounded border custom-control custom-radio font-weight-normal cursor-pointer">
+                                    <input type="radio" name="q_{{ q.id }}" value="{{ q.option3 }}" class="me-3">
+                                    {{ q.option3 }}
+                                </label>
+                                <label class="option-card d-flex align-items-center p-3 mb-2 rounded border custom-control custom-radio font-weight-normal cursor-pointer">
+                                    <input type="radio" name="q_{{ q.id }}" value="{{ q.option4 }}" class="me-3">
+                                    {{ q.option4 }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        <div class="text-center mt-5">
+                            <h4 class="text-muted fw-bold">End of Questions</h4>
+                            <p class="text-muted small mb-0">Please review your answers visually in the palette.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let remainingSeconds = parseInt("{{ remaining_time }}");
+        const timerObj = document.getElementById('countdownTimer');
+        const formObj = document.getElementById('aptitudeForm');
+        let timerExpired = false;
+
+        function updateTimerDisplay() {
+            if(remainingSeconds <= 0 && !timerExpired) {
+                timerExpired = true;
+                timerObj.innerHTML = "00:00";
+                timerObj.classList.replace('bg-primary', 'bg-danger');
+                const submitBtn = document.getElementById('btnSubmitTest');
+                submitBtn.innerText = "Time's up! Submitting...";
+                submitBtn.disabled = true;
+                formObj.submit();
+                return;
+            }
+
+            if(timerExpired) return;
+
+            let m = Math.floor(remainingSeconds / 60);
+            let s = remainingSeconds % 60;
+            let mStr = m < 10 ? '0' + m : m;
+            let sStr = s < 10 ? '0' + s : s;
+            
+            timerObj.innerHTML = mStr + ":" + sStr;
+
+            if (remainingSeconds < 300 && !timerObj.classList.contains('bg-danger')) { // under 5 minutes
+                timerObj.classList.replace('bg-primary', 'bg-danger');
+                timerObj.classList.add('pulse-danger');
+            }
+            
+            remainingSeconds--;
+            setTimeout(updateTimerDisplay, 1000);
+        }
+        
+        updateTimerDisplay();
+
+        // Highlight selected options securely
+        const radios = document.querySelectorAll('input[type=radio]');
+        radios.forEach(r => {
+            r.addEventListener('change', function() {
+                // remove highlight from group
+                let parent = this.closest('.options-container');
+                parent.querySelectorAll('.option-card').forEach(oc => {
+                    oc.classList.remove('selected-option-card', 'border-primary', 'bg-primary', 'bg-opacity-10');
+                });
+                // Highlight
+                this.closest('.option-card').classList.add('selected-option-card', 'border-primary', 'bg-primary', 'bg-opacity-10');
+            });
+        });
+    });
+</script>
+{% endblock %}

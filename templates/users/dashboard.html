@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4 fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold mb-1">Welcome back, {{ user.name }} <span class="fs-4">👋</span></h2>
+            <p class="text-muted mb-0">Select a domain and upload your resume to start a fresh assessment.</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Main Assessment Card -->
+        <div class="col-lg-7 mb-4">
+            <div class="card premium-card border-0 shadow-sm h-100 overflow-hidden">
+                <div class="bg-primary bg-gradient p-4 text-white">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-play-circle-fill me-2"></i> Start New Assessment</h5>
+                    <p class="text-white-50 mb-0 small mt-1">Upload your resume to trigger AI ATS screening before the tests.</p>
+                </div>
+                <div class="card-body p-4 p-sm-5">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-dark mb-2"><i class="bi bi-briefcase text-primary me-2"></i>Select Job Domain</label>
+                            <select name="domain" class="form-select form-select-lg bg-light" required>
+                                <option value="" disabled selected>-- Choose a Target Domain --</option>
+                                {% for d in domains %}
+                                    <option value="{{ d }}">{{ d }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-5">
+                            <label class="form-label fw-bold text-dark mb-2"><i class="bi bi-file-earmark-pdf text-danger me-2"></i>Upload Your Resume</label>
+                            <div class="p-4 border border-2 border-dashed rounded-4 text-center bg-light resume-dropzone">
+                                <i class="bi bi-cloud-arrow-up display-4 text-muted mb-2 d-block"></i>
+                                <input type="file" name="resume" class="form-control mt-2" accept=".pdf" required>
+                                <span class="small text-muted mt-2 d-block">Upload your latest PDF resume. Our ATS will analyze your keyword density instantly.</span>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-sm" id="btnLaunch">
+                            Launch Secure Assessment <i class="bi bi-arrow-right-short ms-1"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar Summary -->
+        <div class="col-lg-5 mb-4">
+            <div class="card premium-card border-0 shadow-sm h-100">
+                <div class="card-header bg-transparent border-0 pt-4 pb-0 px-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="fw-bold text-uppercase text-muted mb-0"><i class="bi bi-clock-history me-1"></i> Recent Activity</h6>
+                        <a href="{% url 'user_history' %}" class="btn btn-sm btn-link text-decoration-none">View All</a>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    {% if recent_results %}
+                        <div class="list-group list-group-flush border-0">
+                            {% for r in recent_results|slice:":4" %}
+                                <div class="list-group-item px-0 py-3 border-bottom border-light d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="fw-bold mb-1">{{ r.domain }}</h6>
+                                        <small class="text-muted"><i class="bi bi-calendar3 me-1"></i> {{ r.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge rounded-pill {% if r.total_score >= 80 %}bg-success{% elif r.total_score >= 50 %}bg-warning text-dark{% else %}bg-danger{% endif %} py-2 px-3 mb-1">
+                                            {{ r.total_score }}%
+                                        </span><br>
+                                        <a href="{% url 'user_result' r.id %}" class="small text-decoration-none text-primary fw-bold">Report <i class="bi bi-chevron-right"></i></a>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center p-5 mt-3">
+                            <div class="display-1 text-light mb-3"><i class="bi bi-inbox"></i></div>
+                            <h5 class="text-muted">No History Yet</h5>
+                            <p class="small text-muted mb-0">Your completed assessments will appear here securely.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.border-dashed { border-style: dashed !important; border-color: #cbd5e1 !important; }
+.resume-dropzone { transition: background 0.2s ease; }
+.resume-dropzone:hover { background-color: #f1f5f9 !important; border-color: var(--primary-color) !important; cursor: pointer; }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const btn = document.getElementById('btnLaunch');
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function() {
+            setTimeout(() => {
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Initializing ATS AI...';
+                btn.classList.add('disabled');
+            }, 10);
+        });
+    });
+</script>
+{% endblock %}

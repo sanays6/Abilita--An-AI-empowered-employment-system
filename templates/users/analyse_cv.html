@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Analyse CV - ABILITA{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto text-center fade-in">
+            <h1 class="display-5 fw-bold mb-3"><i class="bi bi-file-earmark-person text-primary me-3"></i>AI CV Analyzer</h1>
+            <p class="lead text-muted">Upload your CV to receive a personalized report on your strengths and discover which job roles are the best match for your profile.</p>
+        </div>
+    </div>
+
+    <div class="row fade-in" style="animation-delay: 0.1s;">
+        <div class="col-lg-6 mx-auto">
+            <div class="card premium-card border-0 shadow-lg mb-5">
+                <div class="card-body p-sm-5 text-center">
+                    <h4 class="card-title fw-bold mb-4">Upload your Resume</h4>
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-4 text-start">
+                            <label for="resume" class="form-label fw-bold text-secondary">PDF Format Only</label>
+                            <input class="form-control form-control-lg" type="file" id="resume" name="resume" accept="application/pdf" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow-sm">
+                            <i class="bi bi-magic me-2"></i> Analyse My CV
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if report %}
+    <div class="row fade-in" style="animation-delay: 0.2s;">
+        <div class="col-lg-10 mx-auto">
+            <div class="card premium-card border-0 shadow p-4 mb-5">
+                <h3 class="fw-bold mb-4 border-bottom pb-3"><i class="bi bi-file-earmark-text text-info me-2"></i> Analysis Report</h3>
+                
+                <div class="mb-4">
+                    <h5 class="fw-bold text-secondary"><i class="bi bi-person-lines-fill me-2"></i> Professional Summary</h5>
+                    <div class="p-3 bg-light rounded text-dark fs-5">
+                        {{ report.summary }}
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-4 mb-md-0">
+                        <h5 class="fw-bold text-secondary"><i class="bi bi-lightning-charge-fill text-warning me-2"></i> Key Strengths</h5>
+                        <ul class="list-group list-group-flush border rounded overflow-hidden">
+                            {% for strength in report.strengths %}
+                            <li class="list-group-item bg-light border-0 mb-1 rounded"><i class="bi bi-check-circle-fill text-success me-2"></i>{{ strength }}</li>
+                            {% empty %}
+                            <li class="list-group-item text-muted">No specific strengths identified.</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h5 class="fw-bold text-secondary"><i class="bi bi-briefcase-fill text-primary me-2"></i> Suitable Roles / Domains</h5>
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            {% for role in report.suitable_roles %}
+                            <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill shadow-sm">{{ role }}</span>
+                            {% empty %}
+                            <span class="text-muted">No roles suggested.</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

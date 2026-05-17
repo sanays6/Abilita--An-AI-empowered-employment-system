@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}System AI Configuration{% endblock %}
+
+{% block content %}
+<div class="container mt-4 fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <span class="badge bg-danger text-light mb-2 px-3 py-2 rounded-pill fw-bold border border-danger"><i class="bi bi-shield-lock-fill me-1"></i> Root Administrator</span>
+            <h2 class="fw-bold mb-0"><i class="bi bi-cpu-fill text-primary me-2"></i> Artificial Intelligence Setup</h2>
+            <p class="text-muted">Manage global LLM environments and structural configurations.</p>
+        </div>
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4"><i class="bi bi-arrow-left me-1"></i> Back to Dashboard</a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card premium-card border-0 shadow-lg">
+                <div class="card-body p-sm-5">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <h4 class="fw-bold text-dark mb-4 border-bottom pb-3"><i class="bi bi-key-fill text-warning me-2"></i> Groq API Configuration</h4>
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Private API Key (gsk_...)</label>
+                            <input type="password" name="api_key" class="form-control form-control-lg text-bg-light" placeholder="{% if masked_key %}{{ masked_key }}{% else %}Enter Groq API Key to override default environment{% endif %}">
+                            <div class="form-text">
+                                {% if masked_key %}
+                                    <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i> A database override key is currently active.</span> Leave blank to keep existing key.
+                                {% else %}
+                                    <span class="text-secondary"><i class="bi bi-info-circle me-1"></i> The system is currently defaulting to the environment `.env` configuration.</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <h4 class="fw-bold text-dark mt-5 mb-4 border-bottom pb-3"><i class="bi bi-braces text-primary me-2"></i> LLM Parameters</h4>
+                        
+                        <div class="mb-5">
+                            <label class="form-label fw-bold text-muted small text-uppercase">Default LLM Model Name</label>
+                            <input type="text" name="model_name" class="form-control form-control-lg text-bg-light" value="{{ config.model_name }}" required>
+                            <div class="form-text">Common models: <code>llama-3.1-8b-instant</code>, <code>mixtral-8x7b-32768</code></div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-sm"><i class="bi bi-cloud-arrow-up-fill me-2"></i> Inject Global Schema Updates</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

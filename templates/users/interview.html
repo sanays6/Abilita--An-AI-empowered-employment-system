@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="immersive-interview-layout fade-in">
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 immersive-header mb-4 rounded-4 shadow-lg">
+        <h5 class="mb-0 fw-bold text-white"><i class="bi bi-robot text-info me-2"></i> Technical AI Interview</h5>
+        <div class="d-flex align-items-center text-white">
+            <span class="me-3 opacity-75">Time Remaining:</span>
+            <div id="countdownTimer" class="fs-5 px-3 py-1 rounded-pill text-bg-dark border border-secondary shadow-sm" style="font-family: monospace;">
+                --:--
+            </div>
+            <span class="badge bg-primary ms-4 fs-6 rounded-pill px-3 py-2">Question {{ q_num }} of {{ total_q }}</span>
+        </div>
+    </div>
+    
+    <div class="row h-100 px-3 pb-5">
+        <div class="col-md-10 mx-auto">
+            <div class="card premium-card border-0 shadow-lg immersive-card text-white">
+                <div class="card-body p-sm-5 text-center">
+                    
+                    <!-- Question Display -->
+                    <div class="mb-5 position-relative z-1">
+                        <i class="bi bi-mic text-info opacity-25 display-1 position-absolute top-50 start-50 translate-middle" style="z-index:-1;"></i>
+                        <h2 class="card-title fw-bold my-4 lh-base" id="questionText">{{ question.question_text }}</h2>
+                    </div>
+                    
+                    <!-- Controls -->
+                    <div class="my-5 d-flex justify-content-center gap-3">
+                        <button type="button" class="btn btn-outline-light btn-lg px-4 rounded-pill" id="btnSpeak">
+                            <i class="bi bi-volume-up-fill me-2"></i> Play Audio
+                        </button>
+                        
+                        <div class="position-relative">
+                            <div class="mic-pulse-ring" id="micPulse" style="display: none;"></div>
+                            <button type="button" class="btn btn-info btn-lg px-5 rounded-pill text-dark fw-bold" id="btnStartRecording">
+                                <i class="bi bi-mic-fill me-2"></i> Start Dictation
+                            </button>
+                            <button type="button" class="btn btn-danger btn-lg px-5 rounded-pill shadow-lg" id="btnStopRecording" style="display: none;">
+                                <i class="bi bi-stop-circle-fill me-2"></i> Stop Dictation
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <p id="recordingStatus" class="fw-bold text-info mb-4" style="display: none;">Listening to your answer...</p>
+                    
+                    <!-- Debug indicator -->
+                    <div id="speechDebug" class="alert alert-info mb-3" style="font-size: 0.8rem; display: none;">
+                        <i class="bi bi-info-circle"></i> <span id="debugText">Checking speech support...</span>
+                    </div>
+                    
+                    <!-- Form Submit -->
+                    <form method="post" action="{% url 'submit_interview_answer' %}" id="answerForm">
+                        {% csrf_token %}
+                        <!-- Visible typing area -->
+                        <div class="form-group mb-4 text-start">
+                            <label for="typedText" class="form-label fw-bold text-white opacity-75">Your Answer:</label>
+                            <textarea class="form-control immersive-textarea fs-5 p-4 rounded-4 text-white" name="answer_text" id="typedText" rows="5" placeholder="Type or dictate your response here..."></textarea>
+                        </div>
+                        
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-success btn-lg px-5 rounded-pill shadow" id="btnSubmitAnswer">Submit Answer & Proceed <i class="bi bi-arrow-right ms-2"></i></button>
+                        </div>
+                    </form>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Scoped Dark Theme CSS for Interview */
+body {
+    background-color: #0f172a !important; /* Force overall bg dark to match immersive */
+}
+.custom-navbar {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border-bottom: 1px solid #1e293b;
+}
+.custom-navbar .navbar-brand, .custom-navbar .nav-link {
+    color: #e2e8f0 !important;
+}
+.immersive-header {
+    background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid #334155;
+}
+.immersive-card {
+    background: #1e293b;
+    border: 1px solid #334155 !important;
+}
+.immersive-textarea {
+    background: #0f172a !important;
+    border: 1px solid #334155 !important;
+}
+.immersive-textarea:focus {
+    box-shadow: 0 0 0 0.25rem rgba(56, 189, 248, 0.25);
+    border-color: #38bdf8 !important;
+}
+
+/* Pulsing Mic CSS */
+.mic-pulse-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: rgba(239, 68, 68, 0.4);
+    z-index: -1;
+    animation: pulse 1.5s infinite ease-out;
+}
+@keyframes pulse {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+}
+</style>
+
+<script>
+console.log("=== Interview Page Loaded ===");
+console.log("Time:", new Date().toISOString());
+
+document.addEventListener("DOMContentLoaded", function() {
+    console.log("DOM Ready - Initializing speech recognition...");
+    
+    let remainingSeconds = parseInt("{{ remaining_time }}");
+    const timerObj = document.getElementById('countdownTimer');
+    const formObj = document.getElementById('answerForm');
+    const btnSubmitAnswer = document.getElementById('btnSubmitAnswer');
+    let timerExpired = false;
+
+    // --- Timer Logic ---
+    function updateTimerDisplay() {
+        if(remainingSeconds <= 0 && !timerExpired) {
+            timerExpired = true;
+            timerObj.innerHTML = "00:00";
+            timerObj.classList.replace('text-bg-dark', 'text-bg-danger');
+            btnSubmitAnswer.innerText = "Time's up! Force submitting...";
+            formObj.submit();
+            return;
+        }
+
+        if(timerExpired) return;
+
+        let m = Math.floor(remainingSeconds / 60);
+        let s = remainingSeconds % 60;
+        let mStr = m < 10 ? '0' + m : m;
+        let sStr = s < 10 ? '0' + s : s;
+        
+        timerObj.innerHTML = mStr + ":" + sStr;
+
+        if (remainingSeconds < 300 && !timerObj.classList.contains('text-bg-danger')) {
+            timerObj.classList.replace('text-bg-dark', 'text-bg-danger');
+        }
+        
+        remainingSeconds--;
+        setTimeout(updateTimerDisplay, 1000);
+    }
+    
+    updateTimerDisplay();
+
+    // --- Speech Logic ---
+    const questionText = document.getElementById('questionText').innerText;
+    const btnSpeak = document.getElementById('btnSpeak');
+    const btnStartRecording = document.getElementById('btnStartRecording');
+    const btnStopRecording = document.getElementById('btnStopRecording');
+    const answerText = document.getElementById('typedText');
+    const recordingStatus = document.getElementById('recordingStatus');
+    const micPulse = document.getElementById('micPulse');
+    const speechDebug = document.getElementById('speechDebug');
+    const debugText = document.getElementById('debugText');
+    
+    // Show debug info
+    speechDebug.style.display = 'block';
+    debugText.innerText = "Checking browser speech support...";
+    
+    // Internal state for speaking mode
+    let isSpeakingMode = false;
+    let spokenAnswer = "";
+    let restartAttempts = 0;
+    const maxRestartAttempts = 3;
+    
+    // Setup Speech Synthesis
+    const synth = window.speechSynthesis;
+    
+    btnSpeak.addEventListener('click', () => {
+        if (synth.speaking) { return; }
+        const utterThis = new SpeechSynthesisUtterance(questionText);
+        synth.speak(utterThis);
+    });
+
+    // Auto-read
+    setTimeout(() => {
+        const utterThis = new SpeechSynthesisUtterance(questionText);
+        synth.speak(utterThis);
+    }, 500);
+
+    // Setup Speech Recognition
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        debugText.innerText = "❌ Speech API not supported. Use Chrome or Edge.";
+        speechDebug.className = "alert alert-danger mb-3";
+        alert("Web Speech API not supported. Please use Chrome/Edge for this feature.");
+    } else {
+        debugText.innerText = "✅ Speech API supported! Click 'Start Dictation' to begin.";
+        speechDebug.className = "alert alert-success mb-3";
+        
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true; // Enable interim results for better feedback
+        recognition.lang = 'en-US';
+        recognition.maxAlternatives = 3; // Get multiple alternatives
+
+        // Debug: Log browser info
+        console.log("Speech Recognition initialized");
+        console.log("Browser:", navigator.userAgent);
+        
+        // Check microphone permissions on init
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(function(stream) {
+                    console.log("Microphone access: Granted");
+                    stream.getTracks().forEach(track => track.stop());
+                })
+                .catch(function(err) {
+                    console.error("Microphone access: Denied -", err);
+                    recordingStatus.innerText = "⚠️ Microphone access denied. Please allow microphone in browser settings.";
+                    recordingStatus.style.display = 'block';
+                });
+        }
+
+        recognition.onstart = function() {
+            isSpeakingMode = true;
+            spokenAnswer = ""; // Clear previous internal answer
+            answerText.value = ""; // Clear textbox inputs
+            answerText.disabled = true; // Disable typing mode during speech
+            restartAttempts = 0; // Reset restart counter
+            
+            recordingStatus.innerText = "🎤 Listening...";
+            recordingStatus.style.display = 'block';
+            btnStartRecording.style.display = 'none';
+            btnStopRecording.style.display = 'inline-block';
+            micPulse.style.display = 'block';
+        };
+
+        recognition.onresult = function(event) {
+            let interimTranscript = '';
+            let finalTranscript = '';
+            
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                const result = event.results[i];
+                const transcript = result[0].transcript;
+                
+                if (result.isFinal) {
+                    finalTranscript += transcript;
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+            
+            // Show interim results for better user feedback
+            if (interimTranscript) {
+                recordingStatus.innerText = "🎤 Hearing: " + interimTranscript + "...";
+            }
+            
+            // Process final results
+            if (finalTranscript) {
+                const confidence = event.results[event.resultIndex][0].confidence;
+                // Lowered threshold from 0.5 to 0.2 to accept more valid transcriptions
+                if (confidence > 0.2 || confidence === 0) { 
+                    let text = finalTranscript.trim();
+                    // Normalize output: Remove filler words
+                    text = text.replace(/\b(um|umm|ah|ahh|uh|uhh)\b/gi, '').replace(/\s+/g, ' ').trim();
+                    
+                    if (text.length > 0) {
+                        // Correct basic punctuation
+                        text = text.charAt(0).toUpperCase() + text.slice(1);
+                        if (!text.endsWith('.') && !text.endsWith('?') && !text.endsWith('!')) {
+                            text += '.';
+                        }
+                        spokenAnswer += (spokenAnswer.length > 0 ? " " : "") + text;
+                    }
+                } else {
+                    console.warn("Low confidence result ignored, confidence:", confidence);
+                }
+            }
+        };
+
+        recognition.onerror = function(event) {
+            console.error("Speech error: " + event.error);
+            if (event.error === 'not-allowed') {
+                alert("Microphone permission denied. Please allow microphone access to use this feature.");
+                recordingStatus.innerText = "Microphone permission denied.";
+            } else if (event.error === 'network') {
+                alert("Network error occurred during speech recognition.");
+                recordingStatus.innerText = "Network error. Please try again.";
+            } else if (event.error === 'no-speech') {
+                // Auto-restart on silence - try again automatically (up to max attempts)
+                if (restartAttempts < maxRestartAttempts) {
+                    console.log("No speech detected, auto-restarting... (attempt " + (restartAttempts + 1) + ")");
+                    recordingStatus.innerText = "No speech detected, listening again...";
+                    restartAttempts++;
+                    try {
+                        recognition.start();
+                    } catch(e) {
+                        console.error("Failed to restart recognition:", e);
+                    }
+                } else {
+                    console.log("Max restart attempts reached");
+                }
+            } else if (event.error === 'aborted') {
+                // User intentionally stopped - don't auto-restart
+                console.log("Recognition aborted by user");
+            } else {
+                // For other errors, try to restart once
+                console.log("Speech error: " + event.error + ", attempting restart...");
+                try {
+                    recognition.start();
+                } catch(e) {
+                    console.error("Failed to restart recognition:", e);
+                }
+            }
+        };
+
+        recognition.onend = function() {
+            btnStartRecording.style.display = 'inline-block';
+            btnStopRecording.style.display = 'none';
+            micPulse.style.display = 'none';
+            
+            if (isSpeakingMode) {
+                isSpeakingMode = false;
+                
+                if (spokenAnswer.trim().length > 0) {
+                    recordingStatus.innerText = "Processing answer...";
+                    // Auto-submit answer after speech ends
+                    answerText.disabled = true; // Ensure textbox is not submitted
+                    let hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'hidden';
+                    hiddenInput.name = 'answer_text';
+                    hiddenInput.value = spokenAnswer.trim();
+                    formObj.appendChild(hiddenInput);
+                    formObj.submit();
+                } else {
+                    // Only show error if max restart attempts reached or user manually stopped
+                    if (restartAttempts >= maxRestartAttempts) {
+                        recordingStatus.innerText = "No speech detected. Please type your answer or try again.";
+                        answerText.disabled = false; // Re-enable typing mode
+                        answerText.focus(); // Focus on text area for manual input
+                        setTimeout(() => {
+                            recordingStatus.style.display = 'none';
+                        }, 5000);
+                    }
+                }
+            }
+            restartAttempts = 0; // Reset for next session
+        };
+
+        btnStartRecording.addEventListener('click', () => {
+            try { 
+                recognition.start(); 
+            } catch(e) {
+                console.error(e);
+            }
+        });
+
+        btnStopRecording.addEventListener('click', () => {
+            recognition.stop();
+        });
+        
+        // Ensure typing mode doesn't cross-interact
+        answerText.addEventListener('focus', () => {
+            if (isSpeakingMode) {
+                answerText.blur();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

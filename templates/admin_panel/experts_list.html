@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4 fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold"><i class="bi bi-person-badge text-info me-2"></i> Authorized Experts</h3>
+            <p class="text-muted">Manage Domain Expert access.</p>
+        </div>
+        <div>
+            <a href="{% url 'admin_add_expert' %}" class="btn btn-info fw-bold text-dark rounded-pill me-2"><i class="bi bi-person-plus me-1"></i> Pre-register Expert</a>
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary rounded-pill"><i class="bi bi-arrow-left"></i> Dashboard</a>
+        </div>
+    </div>
+
+    <div class="card premium-card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Expert Profile</th>
+                            <th>Email Address</th>
+                            <th>Target Domain</th>
+                            <th class="text-end pe-4">Access Controls</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ex in experts %}
+                        <tr>
+                            <td class="ps-4 fw-bold">
+                                {{ ex.name }}
+                            </td>
+                            <td><a href="mailto:{{ ex.email }}" class="text-decoration-none text-muted"><i class="bi bi-envelope me-1"></i> {{ ex.email }}</a></td>
+                            <td><span class="badge bg-warning bg-opacity-10 text-dark border border-warning">{{ ex.domain }}</span></td>
+                            <td class="text-end pe-4">
+                                <a href="{% url 'admin_edit_expert' ex.id %}" class="btn btn-sm btn-outline-secondary rounded-circle me-1" title="Edit Credentials"><i class="bi bi-pencil mt-1"></i></a>
+                                <a href="{% url 'admin_delete_expert' ex.id %}" class="btn btn-sm btn-outline-danger rounded-circle" onclick="return confirm('Revoke expert domain access permanently?');" title="Revoke"><i class="bi bi-trash mt-1"></i></a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center p-5 text-muted">
+                                <i class="bi bi-person-x display-4 mb-3 d-block text-muted opacity-50"></i>
+                                No internal experts have been authorized.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

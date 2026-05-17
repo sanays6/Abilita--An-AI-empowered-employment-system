@@ -1,0 +1,16 @@
+# Core Django packages (required)
+Django==5.0.1
+asgiref==3.7.2
+sqlparse==0.4.3
+
+# PDF processing
+pypdf==5.4.0
+
+# Environment variables
+python-dotenv==1.0.0
+
+# ===========================================
+# BUILT-IN (no installation needed):
+# - json, os, time, urllib.request
+# - django.contrib.* (admin, auth, etc.)
+# ===========================================

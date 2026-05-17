@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4 fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-ui-checks text-warning me-2"></i> Artificial Intelligence Aptitude Builder</h2>
+            <p class="text-muted mb-0">Review and moderate AI-generated question banks.</p>
+        </div>
+        <a href="{% url 'expert_generate_aptitude' %}" class="btn btn-warning rounded-pill fw-bold text-dark px-4"><i class="bi bi-robot me-1"></i> Generate New Run</a>
+    </div>
+
+    <div class="card premium-card border-0 shadow-sm h-100 mb-5">
+        <form method="post" action="{% url 'expert_bulk_delete_aptitude' %}" id="bulkDeleteForm">
+            {% csrf_token %}
+            <div class="card-header bg-transparent border-bottom pt-4 pb-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-database me-2"></i> Main Aptitude Repository</h5>
+                <button type="submit" class="btn btn-sm btn-outline-danger fw-bold rounded-pill px-3 shadow-sm" onclick="return confirm('Are you strictly sure you want to permanently delete all selected AI records?');" id="bulkDeleteBtn" disabled><i class="bi bi-trash-fill me-1"></i> Purge Selected</button>
+            </div>
+            
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4 text-center" style="width: 50px;">
+                                    <input class="form-check-input border-secondary" type="checkbox" id="selectAll">
+                                </th>
+                                <th>Domain</th>
+                                <th class="w-50">Question</th>
+                                <th>Correct Output</th>
+                                <th class="text-end pe-4">Controls</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for q in questions %}
+                            <tr>
+                                <td class="ps-4 text-center">
+                                    <input class="form-check-input q-checkbox border-secondary" type="checkbox" name="question_ids" value="{{ q.id }}">
+                                </td>
+                                <td><span class="badge bg-secondary-subtle text-secondary border">{{ q.domain }}</span></td>
+                                <td>
+                                    <p class="mb-0 fw-medium small text-dark d-inline-block text-truncate" style="max-width: 450px;">{{ q.question }}</p>
+                                </td>
+                                <td><span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">{{ q.correct_answer|truncatechars:30 }}</span></td>
+                                <td class="text-end pe-4">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle me-1" data-bs-toggle="modal" data-bs-target="#editModal{{ q.id }}" title="Edit Node"><i class="bi bi-pencil mt-1"></i></button>
+                                    <a href="{% url 'expert_delete_aptitude' q.id %}" class="btn btn-sm btn-outline-danger rounded-circle" onclick="return confirm('Strictly delete this AI record?');" title="Purge"><i class="bi bi-trash mt-1"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center p-5 text-muted">
+                                    <i class="bi bi-hdd-slash display-4 mb-3 d-block text-muted opacity-50"></i>
+                                    No Aptitude Questions exist in the AI logic repository.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Modals placed outside table -->
+{% for q in questions %}
+<div class="modal fade" id="editModal{{ q.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content premium-card border-0">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-warning me-2"></i> Override Aptitude Entry</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'expert_edit_aptitude' q.id %}">
+                {% csrf_token %}
+                <div class="modal-body p-4 text-start">
+                    <div class="mb-4">
+                        <label class="form-label text-muted fw-bold small text-uppercase">Question Prompt</label>
+                        <textarea name="question" class="form-control text-bg-light fw-medium" rows="3" required>{{ q.question }}</textarea>
+                    </div>
+                    <div class="row gx-4 gy-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Option 1</label>
+                            <input type="text" name="option1" class="form-control text-bg-light" value="{{ q.option1 }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Option 2</label>
+                            <input type="text" name="option2" class="form-control text-bg-light" value="{{ q.option2 }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Option 3</label>
+                            <input type="text" name="option3" class="form-control text-bg-light" value="{{ q.option3 }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold">Option 4</label>
+                            <input type="text" name="option4" class="form-control text-bg-light" value="{{ q.option4 }}" required>
+                        </div>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label text-success fw-bold small text-uppercase"><i class="bi bi-check-circle me-1"></i> Exact Correct Output</label>
+                        <input type="text" name="correct_answer" class="form-control border-success text-success bg-success bg-opacity-10 fw-bold" value="{{ q.correct_answer }}" required placeholder="Must match one option exactly.">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pb-4 px-4 d-flex justify-content-between text-end">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel Override</button>
+                    <button type="submit" class="btn btn-warning fw-bold text-dark rounded-pill px-4">Inject Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.q-checkbox');
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+
+    function updateDeleteButtonState() {
+        const anyChecked = Array.from(checkboxes).some(cb => cb.checked);
+        bulkDeleteBtn.disabled = !anyChecked;
+    }
+
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function() {
+            checkboxes.forEach(cb => { cb.checked = selectAllCheckbox.checked; });
+            updateDeleteButtonState();
+        });
+    }
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateDeleteButtonState);
+    });
+});
+</script>
+{% endblock %}

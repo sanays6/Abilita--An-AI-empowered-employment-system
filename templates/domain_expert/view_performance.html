@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4 fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1"><i class="bi bi-file-earmark-person text-info me-2"></i> Performance Analysis</h2>
+            <p class="text-muted fw-bold">Candidate: <span class="text-primary">{{ result.user.name }}</span></p>
+        </div>
+        <a href="{% url 'expert_dashboard' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Expert Hub</a>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row text-center mb-5">
+        <div class="col-md-3 mb-3">
+            <div class="card premium-card border-0 bg-white shadow-sm h-100">
+                <div class="card-body py-4">
+                    <h6 class="text-muted text-uppercase fw-bold small mb-2">Target Domain</h6>
+                    <span class="badge bg-dark bg-opacity-10 text-dark px-3 py-2 fs-6 rounded-pill border">{{ result.domain }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card premium-card border-0 bg-white shadow-sm h-100">
+                <div class="card-body py-4">
+                    <h6 class="text-muted text-uppercase fw-bold small mb-2">Aptitude Score</h6>
+                    <h2 class="fw-bold text-info mb-0">{{ result.aptitude_score }} <span class="fs-5 text-muted fw-normal">/ 20</span></h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card premium-card border-0 bg-white shadow-sm h-100">
+                <div class="card-body py-4">
+                    <h6 class="text-muted text-uppercase fw-bold small mb-2">Voice Interview</h6>
+                    <h2 class="fw-bold text-warning mb-0">{{ result.interview_score }} <span class="fs-5 text-muted fw-normal">/ 10</span></h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card premium-card border-0 shadow-sm h-100 {% if result.total_score >= 80 %}bg-success text-white{% elif result.total_score >= 50 %}bg-warning text-dark{% else %}bg-danger text-white{% endif %}">
+                <div class="card-body py-4">
+                    <h6 class="text-uppercase fw-bold small mb-2 opacity-75">Algorithmic Total</h6>
+                    <h2 class="fw-bold mb-0">{{ result.total_score }}%</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <hr class="text-muted opacity-25 my-5">
+
+    <!-- Detailed NLP Analysis -->
+    <h4 class="mb-4 fw-bold text-dark"><i class="bi bi-soundwave text-primary me-2"></i> Voice Interview Transcript & NLP Evaluation</h4>
+    
+    {% if details %}
+        <div class="row">
+        {% for qa in details %}
+            <div class="col-12 mb-4">
+                <div class="card premium-card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom p-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <h5 class="fw-bold mb-0 text-dark"><span class="text-muted me-2">Q{{ forloop.counter }}.</span> {{ qa.question }}</h5>
+                            <span class="badge {% if qa.score >= 8 %}bg-success{% elif qa.score >= 5 %}bg-warning text-dark{% else %}bg-danger{% endif %} fs-5 ms-3 px-3 py-2 rounded-pill shadow-sm">{{ qa.score }} / 10</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body p-0">
+                        <div class="row g-0">
+                            <!-- Transcription -->
+                            <div class="col-md-6 border-end p-4 bg-light">
+                                <h6 class="fw-bold text-muted text-uppercase small mb-3"><i class="bi bi-mic me-1"></i> Candidate Raw Transcription</h6>
+                                <p class="mb-0 text-dark lh-lg font-monospace fs-6" style="white-space: pre-wrap;">{{ qa.user_answer }}</p>
+                            </div>
+                            
+                            <!-- AI Feedback -->
+                            <div class="col-md-6 p-4">
+                                <h6 class="fw-bold text-muted text-uppercase small mb-3"><i class="bi bi-cpu me-1"></i> LLM Automated Feedback</h6>
+                                <div class="alert alert-info border-0 shadow-sm text-dark bg-info bg-opacity-10 mb-0 lh-lg" style="white-space: pre-wrap;">{{ qa.llm_evaluation }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+    {% else %}
+        <div class="card premium-card border-0 shadow-sm p-5 text-center">
+            <h4 class="text-muted"><i class="bi bi-clock-history d-block display-4 mb-3"></i> NLP Evaluation Pending</h4>
+            <p class="text-muted mb-0">Detailed LLM evaluation datasets are not strictly available for this exact performance cycle.</p>
+        </div>
+        {% if result.result_json %}
+            <div class="bg-dark text-success font-monospace p-4 rounded mt-4 shadow-sm overflow-auto" style="max-height: 200px;">
+                <pre class="mb-0">{{ result.result_json }}</pre>
+            </div>
+        {% endif %}
+    {% endif %}
+
+    <div class="text-center mt-5 mb-5">
+        <a href="{% url 'expert_dashboard' %}" class="btn btn-secondary btn-lg px-5 rounded-pill fw-bold"><i class="bi bi-arrow-left me-1"></i> Back to Hub</a>
+    </div>
+</div>
+{% endblock %}

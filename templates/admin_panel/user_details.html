@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4 fade-in">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold"><i class="bi bi-zoom-in text-primary me-2"></i> Candidate Profile</h3>
+            <p class="text-muted">System dossier for ID: <span class="fw-bold">#{{ user.id|stringformat:"04d" }}</span></p>
+        </div>
+        <a href="{% url 'admin_list_users' %}" class="btn btn-outline-secondary rounded-pill"><i class="bi bi-arrow-left"></i> Back to Directory</a>
+    </div>
+
+    <!-- Candidate Core Details -->
+    <div class="card premium-card border-0 bg-white shadow-sm mb-4">
+        <div class="card-body p-sm-5">
+            <div class="row g-4 align-items-center text-center text-md-start">
+                <div class="col-md-2">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle mx-auto mx-md-0 flex-center shadow-sm" style="width: 100px; height: 100px;">
+                        <i class="bi bi-person-circle display-3"></i>
+                    </div>
+                </div>
+                <div class="col-md-10 mt-3 mt-md-0">
+                    <h2 class="fw-bold mb-1">{{ user.name }}</h2>
+                    <p class="text-muted mb-3 fs-5"><i class="bi bi-envelope"></i> {{ user.email }}</p>
+                    
+                    <div class="d-flex flex-wrap justify-content-center justify-content-md-start gap-2">
+                        {% if user.selected_domain %}
+                            <span class="badge border border-primary text-primary px-3 py-2 rounded-pill"><i class="bi bi-bullseye me-1"></i> Active Domain: {{ user.selected_domain }}</span>
+                        {% endif %}
+                        {% if user.resume %}
+                            <span class="badge border border-success text-success px-3 py-2 rounded-pill"><i class="bi bi-cloud-check me-1"></i> ATS File Attached</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

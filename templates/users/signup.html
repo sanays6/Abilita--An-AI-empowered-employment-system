@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row min-vh-100 align-items-center fade-in pb-5">
+    <div class="col-md-5 mx-auto">
+        <div class="text-center mb-4">
+            <div class="display-4 text-primary mb-3"><i class="bi bi-person-plus-fill"></i></div>
+            <h2 class="fw-bold">Create Account</h2>
+            <p class="text-muted">Register to begin your AI interview</p>
+        </div>
+        
+        <div class="card premium-card border-0 shadow-sm p-4">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Full Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-person"></i></span>
+                            <input type="text" name="name" class="form-control border-start-0 ps-0 text-bg-light custom-input" placeholder="John Doe" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                            <input type="email" name="email" class="form-control border-start-0 ps-0 text-bg-light custom-input" placeholder="name@example.com" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted small text-uppercase">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-key"></i></span>
+                            <input type="password" name="password" class="form-control border-start-0 ps-0 text-bg-light custom-input" placeholder="Create a secure password" required>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold rounded-pill shadow-sm mb-3">Sign Up</button>
+                    
+                    <div class="text-center mt-3">
+                        <span class="text-muted small">Already registered? </span>
+                        <a href="{% url 'user_login' %}" class="text-primary text-decoration-none fw-bold small">Sign in here</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.custom-input { background-color: #f8f9fa !important; box-shadow: none !important; }
+.custom-input:focus { background-color: #fff !important; }
+.input-group:focus-within .input-group-text { background-color: #fff !important; border-color: var(--primary-color); color: var(--primary-color) !important; }
+.input-group:focus-within .custom-input { border-color: var(--primary-color); }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const nameInput = document.querySelector('input[name="name"]');
+    const emailInput = document.querySelector('input[name="email"]');
+    const passwordInput = document.querySelector('input[name="password"]');
+    
+    // Function to show error
+    function showError(input, message) {
+        // Remove existing error
+        const existingError = input.parentElement.querySelector('.error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Add error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message text-danger small mt-1';
+        errorDiv.textContent = message;
+        input.parentElement.parentElement.appendChild(errorDiv);
+        
+        // Add error class to input
+        input.classList.add('is-invalid');
+    }
+    
+    // Function to clear error
+    function clearError(input) {
+        const error = input.parentElement.parentElement.querySelector('.error-message');
+        if (error) {
+            error.remove();
+        }
+        input.classList.remove('is-invalid');
+    }
+    
+    // Validate name
+    function validateName() {
+        const name = nameInput.value.trim();
+        if (name === '') {
+            showError(nameInput, 'Full name is required');
+            return false;
+        }
+        if (name.length < 2) {
+            showError(nameInput, 'Full name must be at least 2 characters');
+            return false;
+        }
+        clearError(nameInput);
+        return true;
+    }
+    
+    // Validate email
+    function validateEmail() {
+        const email = emailInput.value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (email === '') {
+            showError(emailInput, 'Email address is required');
+            return false;
+        }
+        if (!emailRegex.test(email)) {
+            showError(emailInput, 'Please enter a valid email address');
+            return false;
+        }
+        clearError(emailInput);
+        return true;
+    }
+    
+    // Validate password
+    function validatePassword() {
+        const password = passwordInput.value;
+        if (password === '') {
+            showError(passwordInput, 'Password is required');
+            return false;
+        }
+        if (password.length < 6) {
+            showError(passwordInput, 'Password must be at least 6 characters');
+            return false;
+        }
+        clearError(passwordInput);
+        return true;
+    }
+    
+    // Add event listeners for real-time validation
+    nameInput.addEventListener('blur', validateName);
+    emailInput.addEventListener('blur', validateEmail);
+    passwordInput.addEventListener('blur', validatePassword);
+    
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        const isNameValid = validateName();
+        const isEmailValid = validateEmail();
+        const isPasswordValid = validatePassword();
+        
+        if (!isNameValid || !isEmailValid || !isPasswordValid) {
+            e.preventDefault();
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}
